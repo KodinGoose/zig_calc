@@ -1,6 +1,9 @@
 # zig_calc
 A very simple terminal based calculator made in Zig. 
-Currently only does addition(+), subtraction(-), multiplication(*) and division(/) and the inputed numbers must be positive.
+
+Currently only does addition(+), subtraction(-), multiplication(*), division(/), modulo(%) and powers(^)
+The inputed numbers must be positive and must be integers.
+
 Example equations:  5 * 5 + 5 = 30; 5 + 5 * 5 = 50
 Whitespace is ignored. Type 'q' into an equation to exit the program.
 

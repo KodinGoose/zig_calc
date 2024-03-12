@@ -24,6 +24,9 @@ const errors = error{
     Unexpected,
 };
 
+const possible_numbers = [_]u8{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+const possible_symbols = [_]u8{ '+', '-', '*', '/', '%', '^' };
+
 fn getInput(buf: anytype) ![]u8 {
     const stdin = std.io.getStdIn().reader();
     const input = (try stdin.readUntilDelimiterOrEof(buf.*[0..], '\n')).?;
@@ -36,8 +39,6 @@ fn evaluateInputAndCount(input: anytype) errors!i512 {
     var symbols = std.ArrayList(u8).init(std.heap.page_allocator);
     defer symbols.deinit();
 
-    const possible_numbers = [_]u8{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-    const possible_symbols = [_]u8{ '+', '-', '*', '/' };
     var same_number: bool = undefined;
     var tmp_number: i512 = 0;
     for (input) |letter| {
@@ -75,6 +76,7 @@ fn evaluateInputAndCount(input: anytype) errors!i512 {
     // for (symbols.items) |symbol| try stdout.print("{c} ", .{symbol});
     // try stdout.writeAll("\n");
 
+    var x: i512 = undefined;
     tmp_number = 0;
     for (symbols.items) |symbol| {
         if (symbol == '+') {
@@ -94,6 +96,24 @@ fn evaluateInputAndCount(input: anytype) errors!i512 {
             try numbers.insert(0, tmp_number);
         } else if (symbol == '/') {
             tmp_number = @divFloor(numbers.items[0], numbers.items[1]);
+            _ = numbers.orderedRemove(0);
+            _ = numbers.orderedRemove(0);
+            try numbers.insert(0, tmp_number);
+        } else if (symbol == '%') {
+            tmp_number = @mod(numbers.items[0], numbers.items[1]);
+            _ = numbers.orderedRemove(0);
+            _ = numbers.orderedRemove(0);
+            try numbers.insert(0, tmp_number);
+        } else if (symbol == '^') {
+            if (numbers.items[1] != 0) {
+                x = numbers.items[1] - 1;
+                tmp_number = numbers.items[0];
+
+                while (x > 0) : (x -= 1) {
+                    tmp_number = tmp_number * numbers.items[0];
+                }
+            } else tmp_number = 1;
+
             _ = numbers.orderedRemove(0);
             _ = numbers.orderedRemove(0);
             try numbers.insert(0, tmp_number);

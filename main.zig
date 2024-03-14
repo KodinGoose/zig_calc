@@ -1,39 +1,17 @@
 const std = @import("std");
 
-// These are all the errors this program can return
-// The only ones that should be able to happen are ProgramExit, OutOfMemory and maybe InputError
 // ProgramExit happens when the user inputs q into an equation and is used to gracefully exit
 const errors = error{
     ProgramExit,
     InputError,
+    MathError,
     OutOfMemory,
-    DiskQuota,
-    FileTooBig,
-    InputOutput,
-    NoSpaceLeft,
-    DeviceBusy,
-    InvalidArgument,
-    AccessDenied,
-    BrokenPipe,
-    SystemResources,
-    OperationAborted,
-    NotOpenForWriting,
-    LockViolation,
-    WouldBlock,
-    ConnectionResetByPeer,
-    Unexpected,
 };
 
 const possible_numbers = [_]u8{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 const possible_symbols = [_]u8{ '+', '-', '*', '/', '%', '^' };
 
-fn getInput(buf: anytype) ![]u8 {
-    const stdin = std.io.getStdIn().reader();
-    const input = (try stdin.readUntilDelimiterOrEof(buf.*[0..], '\n')).?;
-    return input;
-}
-
-fn evaluateInputAndCount(input: anytype) errors!i512 {
+fn evaluateInputAndCount(input: *std.ArrayList(u8)) errors!i512 {
     var numbers = std.ArrayList(i512).init(std.heap.page_allocator);
     defer numbers.deinit();
     var symbols = std.ArrayList(u8).init(std.heap.page_allocator);
@@ -41,7 +19,7 @@ fn evaluateInputAndCount(input: anytype) errors!i512 {
 
     var same_number: bool = undefined;
     var tmp_number: i512 = 0;
-    for (input) |letter| {
+    for (input.*.items) |letter| {
         same_number = false;
         for (possible_numbers) |possible_number| {
             if (possible_number == letter) {
@@ -59,8 +37,8 @@ fn evaluateInputAndCount(input: anytype) errors!i512 {
                 }
             }
         } else {
-            tmp_number *= 10;
-            tmp_number += letter - 48;
+            tmp_number *%= 10;
+            tmp_number +%= letter - 48;
         }
 
         if (letter == 'q') return errors.ProgramExit;
@@ -80,26 +58,28 @@ fn evaluateInputAndCount(input: anytype) errors!i512 {
     tmp_number = 0;
     for (symbols.items) |symbol| {
         if (symbol == '+') {
-            tmp_number = numbers.items[0] + numbers.items[1];
+            tmp_number = numbers.items[0] +% numbers.items[1];
             _ = numbers.orderedRemove(0);
             _ = numbers.orderedRemove(0);
             try numbers.insert(0, tmp_number);
         } else if (symbol == '-') {
-            tmp_number = numbers.items[0] - numbers.items[1];
+            tmp_number = numbers.items[0] -% numbers.items[1];
             _ = numbers.orderedRemove(0);
             _ = numbers.orderedRemove(0);
             try numbers.insert(0, tmp_number);
         } else if (symbol == '*') {
-            tmp_number = numbers.items[0] * numbers.items[1];
+            tmp_number = numbers.items[0] *% numbers.items[1];
             _ = numbers.orderedRemove(0);
             _ = numbers.orderedRemove(0);
             try numbers.insert(0, tmp_number);
         } else if (symbol == '/') {
+            if (numbers.items[1] == 0) return errors.MathError;
             tmp_number = @divFloor(numbers.items[0], numbers.items[1]);
             _ = numbers.orderedRemove(0);
             _ = numbers.orderedRemove(0);
             try numbers.insert(0, tmp_number);
         } else if (symbol == '%') {
+            if (numbers.items[1] == 0) return errors.MathError;
             tmp_number = @mod(numbers.items[0], numbers.items[1]);
             _ = numbers.orderedRemove(0);
             _ = numbers.orderedRemove(0);
@@ -110,7 +90,7 @@ fn evaluateInputAndCount(input: anytype) errors!i512 {
                 tmp_number = numbers.items[0];
 
                 while (x > 0) : (x -= 1) {
-                    tmp_number = tmp_number * numbers.items[0];
+                    tmp_number = tmp_number *% numbers.items[0];
                 }
             } else tmp_number = 1;
 
@@ -125,12 +105,18 @@ fn evaluateInputAndCount(input: anytype) errors!i512 {
 
 pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
-    var buf: [500]u8 = undefined;
+    const stdin = std.io.getStdIn().reader();
+    var input = std.ArrayList(u8).init(std.heap.page_allocator);
     while (true) {
-        buf = undefined;
-        const input = try getInput(&buf);
-        const result = evaluateInputAndCount(input) catch |err| {
-            if (err == errors.ProgramExit) break else return err;
+        try stdin.streamUntilDelimiter(input.writer(), '\n', null);
+        defer input.clearAndFree();
+        const result = evaluateInputAndCount(&input) catch |err| {
+            if (err == errors.ProgramExit) {
+                return;
+            } else if (err == errors.MathError) {
+                try stdout.writeAll("Error: MathError\n");
+                continue;
+            } else return err;
         };
         try stdout.print("Result: {}\n", .{result});
     }

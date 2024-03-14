@@ -2,9 +2,9 @@
 A very simple terminal based calculator made in Zig. 
 
 Currently only does addition(+), subtraction(-), multiplication(*), division(/), modulo(%) and powers(^)
-The inputed numbers must be positive and must be integers.
+The inputed numbers must be positive and must be integers. The biggest number this program can handle is 2^512/2-1 and the smallest number is 2^512/(-2)
 
-Example equations:  5 * 5 + 5 = 30; 5 + 5 * 5 = 50
+Example equations:  5 * 5 + 5 = 30, 5 + 5 * 5 = 50
 Whitespace is ignored. Type 'q' into an equation to exit the program.
 
 Additional features planed in the future.

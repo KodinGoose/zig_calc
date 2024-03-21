@@ -65,12 +65,12 @@ fn evaluateInputAndCount(input: *std.ArrayList(u8)) errors!i512 {
     try numbers.append(tmp_number);
 
     // ! This is just for debugging!
-    std.debug.print("numbers: ", .{});
-    for (numbers.items) |number| std.debug.print("{d} ", .{number});
-    std.debug.print("\n", .{});
-    std.debug.print("symbols: ", .{});
-    for (symbols.items) |symbol| std.debug.print("{c} ", .{symbol});
-    std.debug.print("\n", .{});
+    // std.debug.print("numbers: ", .{});
+    // for (numbers.items) |number| std.debug.print("{d} ", .{number});
+    // std.debug.print("\n", .{});
+    // std.debug.print("symbols: ", .{});
+    // for (symbols.items) |symbol| std.debug.print("{c} ", .{symbol});
+    // std.debug.print("\n", .{});
 
     var i: u64 = 0;
     var x: i512 = undefined;
